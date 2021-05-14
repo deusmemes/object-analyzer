@@ -1,7 +1,9 @@
-from tensorflow.keras.models import model_from_json
+import flask_server as server
+from analyzer import Analyzer
+import cv2 as cv
 
-model = model_from_json(open('../models/ResUNet-seg-model.json').read())
-model.load_weights('../models/ResUNet-segModel-weights.hdf5')
 
-pred = model.predict()
+server.run()
 
+anlz = Analyzer()
+# anlz.analyze([cv.imread('./data/img1.tif'), cv.imread('./data/img2.tif'), cv.imread('./data/img1.tif')])

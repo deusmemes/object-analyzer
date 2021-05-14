@@ -1,11 +1,10 @@
-# Python 2/3 compatibility
 from __future__ import print_function
 
 import numpy as np
 import cv2 as cv
 
 FLANN_INDEX_KDTREE = 1
-FLANN_INDEX_LSH    = 6
+FLANN_INDEX_LSH = 6
 
 
 def init_feature(name):
@@ -26,19 +25,19 @@ def init_feature(name):
         return None, None
     if 'flann' in chunks:
         if norm == cv.NORM_L2:
-            flann_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+            flann_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
         else:
-            flann_params= dict(algorithm = FLANN_INDEX_LSH,
-                               table_number = 6, # 12
-                               key_size = 12,     # 20
-                               multi_probe_level = 1) #2
+            flann_params = dict(algorithm=FLANN_INDEX_LSH,
+                                table_number=6,  # 12
+                                key_size=12,  # 20
+                                multi_probe_level=1)  # 2
         matcher = cv.FlannBasedMatcher(flann_params, {})  # bug : need to pass empty dict (#1329)
     else:
         matcher = cv.BFMatcher(norm)
     return detector, matcher
 
 
-def filter_matches(kp1, kp2, matches, ratio = 0.75):
+def filter_matches(kp1, kp2, matches, ratio=0.75):
     mkp1, mkp2 = [], []
     for m in matches:
         if len(m) == 2 and m[0].distance < m[1].distance * ratio:
@@ -50,17 +49,19 @@ def filter_matches(kp1, kp2, matches, ratio = 0.75):
     kp_pairs = zip(mkp1, mkp2)
     return p1, p2, list(kp_pairs)
 
-def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
+
+def explore_match(img1, img2, kp_pairs, status=None, H=None):
     h1, w1 = img1.shape[:2]
     h2, w2 = img2.shape[:2]
-    vis = np.zeros((max(h1, h2), w1+w2), np.uint8)
+    vis = np.zeros((max(h1, h2), w1 + w2), np.uint8)
     vis[:h1, :w1] = img1
-    vis[:h2, w1:w1+w2] = img2
+    vis[:h2, w1:w1 + w2] = img2
     vis = cv.cvtColor(vis, cv.COLOR_GRAY2BGR)
 
     if H is not None:
         corners = np.float32([[0, 0], [w1, 0], [w1, h1], [0, h1]])
-        corners = np.int32( cv.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2) + (w1, 0) )
+        corners = np.int32(cv.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2) + (w1, 0))
+        print(corners)
         cv.polylines(vis, [corners], True, (255, 255, 255))
 
     if status is None:
@@ -71,24 +72,10 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
         p2.append(np.int32(np.array(kpp[1].pt) + [w1, 0]))
 
     green = (0, 255, 0)
-    red = (0, 0, 255)
-    kp_color = (51, 103, 236)
     for (x1, y1), (x2, y2), inlier in zip(p1, p2, status):
         if inlier:
             col = green
             cv.circle(vis, (x1, y1), 2, col, -1)
             cv.circle(vis, (x2, y2), 2, col, -1)
-        else:
-            col = red
-            r = 2
-            thickness = 3
-            cv.line(vis, (x1-r, y1-r), (x1+r, y1+r), col, thickness)
-            cv.line(vis, (x1-r, y1+r), (x1+r, y1-r), col, thickness)
-            cv.line(vis, (x2-r, y2-r), (x2+r, y2+r), col, thickness)
-            cv.line(vis, (x2-r, y2+r), (x2+r, y2-r), col, thickness)
-    vis0 = vis.copy()
-    for (x1, y1), (x2, y2), inlier in zip(p1, p2, status):
-        if inlier:
-            cv.line(vis, (x1, y1), (x2, y2), green)
 
-    cv.imshow(win, vis)
+    return vis, corners

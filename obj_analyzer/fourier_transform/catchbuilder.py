@@ -1,4 +1,4 @@
-from basebuilder import BuilderBase
+from obj_analyzer.fourier_transform.basebuilder import BuilderBase
 import numpy as np
 
 

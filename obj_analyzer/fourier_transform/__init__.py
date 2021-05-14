@@ -1,6 +1,6 @@
 import cv2 as cv
 import numpy as np
-from catchbuilder import CatchBuilder
+from obj_analyzer.fourier_transform.catchbuilder import CatchBuilder
 
 
 class FourierTransform:
